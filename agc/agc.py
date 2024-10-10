@@ -111,7 +111,6 @@ def dereplication_fulllength(amplicon_file: Path, minseqlen: int, mincount: int)
     all_seqs = [sequence for sequence in read_fasta(amplicon_file, minseqlen)]
     count_dict = Counter(all_seqs)
     count_dict = count_dict.most_common()
-    print(count_dict)
 
     for (key, count) in count_dict:
         if count >= mincount:
@@ -203,6 +202,7 @@ def main(): # pragma: no cover
                                            kmer_size)
     
     # Save results
+    write_OTU(otu_list, output_file)
 
 
 

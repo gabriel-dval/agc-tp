@@ -20,19 +20,19 @@ import gzip
 import statistics
 import textwrap
 from pathlib import Path
-from collections import Counter
+from collections import defaultdict
 from typing import Iterator, Dict, List
 # https://github.com/briney/nwalign3
 # ftp://ftp.ncbi.nih.gov/blast/matrices/
 import nwalign3 as nw
 
-__author__ = "Your Name"
+__author__ = "Gabriel Duval"
 __copyright__ = "Universite Paris Diderot"
-__credits__ = ["Your Name"]
+__credits__ = ["Gabriel Duval"]
 __license__ = "GPL"
 __version__ = "1.0.0"
-__maintainer__ = "Your Name"
-__email__ = "your@email.fr"
+__maintainer__ = "Gabriel Duval"
+__email__ = "gabriel.duval@etu.u-paris.fr"
 __status__ = "Developpement"
 
 
@@ -83,7 +83,18 @@ def read_fasta(amplicon_file: Path, minseqlen: int) -> Iterator[str]:
     :param minseqlen: (int) Minimum amplicon sequence length
     :return: A generator object that provides the Fasta sequences (str).
     """
-    pass
+    with gzip.open(amplicon_file, 'rt') as filout:
+        current_seq = ''
+        for line in filout:
+            if line.startswith('>') and len(current_seq) == 0:
+                continue
+            elif line.startswith('>') and len(current_seq) > minseqlen:
+                yield current_seq
+            else:
+                current_seq += line.strip()
+
+# for seq in read_fasta('data/amplicon.fasta.gz', minseqlen=1):
+#     print(seq)
 
 
 def dereplication_fulllength(amplicon_file: Path, minseqlen: int, mincount: int) -> Iterator[List]:
@@ -94,7 +105,17 @@ def dereplication_fulllength(amplicon_file: Path, minseqlen: int, mincount: int)
     :param mincount: (int) Minimum amplicon count
     :return: A generator object that provides a (list)[sequences, count] of sequence with a count >= mincount and a length >= minseqlen.
     """
-    pass
+    count_dict = defaultdict(int)
+
+    for sequence in read_fasta(amplicon_file, minseqlen):
+        count_dict[sequence] += 1
+
+    for key in count_dict:
+        if count_dict[key] > mincount:
+            yield(key, count_dict[key])
+
+for seq in dereplication_fulllength('data/amplicon.fasta.gz', 1, 3):
+    print(seq)          
 
 def get_identity(alignment_list: List[str]) -> float:
     """Compute the identity rate between two sequences

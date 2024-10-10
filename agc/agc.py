@@ -90,6 +90,7 @@ def read_fasta(amplicon_file: Path, minseqlen: int) -> Iterator[str]:
                 continue
             elif line.startswith('>') and len(current_seq) > minseqlen:
                 yield current_seq
+                current_seq = ''
             else:
                 current_seq += line.strip()
 
@@ -112,10 +113,10 @@ def dereplication_fulllength(amplicon_file: Path, minseqlen: int, mincount: int)
 
     for key in count_dict:
         if count_dict[key] > mincount:
-            yield(key, count_dict[key])
+            yield[key, count_dict[key]]
 
-for seq in dereplication_fulllength('data/amplicon.fasta.gz', 1, 3):
-    print(seq)          
+# for l in dereplication_fulllength('data/amplicon.fasta.gz', 1, 3):
+#     print(l)          
 
 def get_identity(alignment_list: List[str]) -> float:
     """Compute the identity rate between two sequences

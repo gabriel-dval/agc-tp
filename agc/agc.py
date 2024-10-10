@@ -185,8 +185,24 @@ def main(): # pragma: no cover
     """
     # Get arguments
     args = get_arguments()
-    # Votre programme ici
 
+    # Args
+    amplicon_file = args.amplicon_file
+    minseqlen = args.minseqlen
+    mincount = args.mincount
+    chunk_size = 0
+    kmer_size = 0
+    output_file = args.output_file
+    
+    # Programme
+    otu_list = abundance_greedy_clustering(amplicon_file,
+                                           minseqlen,
+                                           mincount,
+                                           chunk_size,
+                                           kmer_size)
+    
+    # Save results
+    
 
 
 if __name__ == '__main__':

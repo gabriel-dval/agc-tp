@@ -95,9 +95,9 @@ def read_fasta(amplicon_file: Path, minseqlen: int) -> Iterator[str]:
                 continue
             else:
                 current_seq += line.strip()
-
-# for seq in read_fasta('data/amplicon.fasta.gz', minseqlen=1):
-#     print(seq)
+        
+        if len(current_seq) >= minseqlen:
+            yield current_seq
 
 
 def dereplication_fulllength(amplicon_file: Path, minseqlen: int, mincount: int) -> Iterator[List]:
@@ -111,17 +111,12 @@ def dereplication_fulllength(amplicon_file: Path, minseqlen: int, mincount: int)
     all_seqs = [sequence for sequence in read_fasta(amplicon_file, minseqlen)]
     count_dict = Counter(all_seqs)
     count_dict = count_dict.most_common()
+    print(count_dict)
 
     for (key, count) in count_dict:
         if count >= mincount:
             yield[key, count]
 
-# counter = 0
-# for l in dereplication_fulllength('data/amplicon.fasta.gz', 1, 3):
-#     print(l)
-#     counter += 1   
-#     if counter > 10:
-#         break    
 
 def get_identity(alignment_list: List[str]) -> float:
     """Compute the identity rate between two sequences
@@ -139,9 +134,6 @@ def get_identity(alignment_list: List[str]) -> float:
     return id
 
 
-    
-
-
 def abundance_greedy_clustering(amplicon_file: Path, minseqlen: int, mincount: int, chunk_size: int, kmer_size: int) -> List:
     """Compute an abundance greedy clustering regarding sequence count and identity.
     Identify OTU sequences.
@@ -153,18 +145,24 @@ def abundance_greedy_clustering(amplicon_file: Path, minseqlen: int, mincount: i
     :param kmer_size: (int) A fournir mais non utilise cette annee
     :return: (list) A list of all the [OTU (str), count (int)] .
     """
-    seqs_and_count = dereplication_fulllength(amplicon_file, minseqlen, mincount)
+    seqs_and_counts = [seq for seq in dereplication_fulllength(amplicon_file, minseqlen, mincount)]
 
-    otu = []
-    for i, j in combinations(seqs_and_count, 2):
-        alignment = nw.global_align(i[0], j[0], gap_open=-1, gap_extend=-1, matrix=str(Path(__file__).parent / "MATCH"))
-        identity = get_identity(list(alignment))
-        if i[1] > j[1] and identity > 0.97:
-            otu.append(i)
+    otu = [seqs_and_counts[0]]  # First sequence necessarily has most abundance
+    for seq_and_count in seqs_and_counts:
+        status = True
+        for ref in otu:
+            alignment = nw.global_align(seq_and_count[0], ref[0], gap_open=-1, gap_extend=-1, 
+                                        matrix=str(Path(__file__).parent / "MATCH"))
+            identity = get_identity(alignment)
+
+            if identity > 97:
+                status = False
+                break
+        
+        if status:
+            otu.append(seq_and_count)
 
     return otu
-
-
 
 
 def write_OTU(OTU_list: List, output_file: Path) -> None:
@@ -173,7 +171,10 @@ def write_OTU(OTU_list: List, output_file: Path) -> None:
     :param OTU_list: (list) A list of OTU sequences
     :param output_file: (Path) Path to the output file
     """
-    pass
+    with open(output_file, 'w') as filin:
+        for i, (sequence, count) in enumerate(OTU_list):
+            filin.write(f'>OTU_{i+1} occurrence:{count}\n')
+            filin.write(f'{textwrap.fill(sequence, width=80)}\n')
 
 
 #==============================================================
@@ -202,7 +203,7 @@ def main(): # pragma: no cover
                                            kmer_size)
     
     # Save results
-    
+
 
 
 if __name__ == '__main__':

@@ -129,6 +129,15 @@ def get_identity(alignment_list: List[str]) -> float:
     :param alignment_list:  (list) A list of aligned sequences in the format ["SE-QUENCE1", "SE-QUENCE2"]
     :return: (float) The rate of identity between the two sequences.
     """
+    identities = 0
+    for ci, cj in zip(alignment_list[0], alignment_list[1]):
+        if ci == cj:
+            identities += 1
+    
+    id = (identities/len(alignment_list[0])) * 100
+
+    return id
+
 
     
 
@@ -152,6 +161,8 @@ def abundance_greedy_clustering(amplicon_file: Path, minseqlen: int, mincount: i
         identity = get_identity(list(alignment))
         if i[1] > j[1] and identity > 0.97:
             otu.append(i)
+
+    return otu
 
 
 

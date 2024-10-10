@@ -15,14 +15,12 @@
 
 import argparse
 import sys
-import os
 import gzip
-import statistics
 import textwrap
 from pathlib import Path
 from collections import Counter
 from itertools import combinations
-from typing import Iterator, Dict, List
+from typing import Iterator, List
 # https://github.com/briney/nwalign3
 # ftp://ftp.ncbi.nih.gov/blast/matrices/
 import nwalign3 as nw
@@ -203,7 +201,6 @@ def main(): # pragma: no cover
     
     # Save results
     write_OTU(otu_list, output_file)
-
 
 
 if __name__ == '__main__':
